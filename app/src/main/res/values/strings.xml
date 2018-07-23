@@ -5,6 +5,14 @@
     <string name="title_dashboard">Schedule</string>
     <string name="title_notifications">Team</string>
     <string name="title_activity_register">Sign in</string>
+    <string name="currentteam">teamid</string>
+
+    <string-array name="status">
+        <item>Status</item>
+        <item>Going</item>
+        <item>Not Going</item>
+
+    </string-array>
 
     <!-- Strings related to login -->
     <string name="prompt_email">Email</string>

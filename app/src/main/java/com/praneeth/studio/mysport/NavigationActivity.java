@@ -8,6 +8,8 @@ import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.design.widget.BottomNavigationView;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -26,16 +28,20 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class NavigationActivity extends AppCompatActivity {
 
 private FirebaseDatabase firebaseDatabase;
-private DatabaseReference userRef,teamRef,eventRef,indTeamRef,teamId;
+private DatabaseReference userRef,teamRef,eventRef,indTeamRef,teamId,attendRef;
 private FirebaseUser user;
 private FirebaseAuth auth;
-String key;
+String key,thisEventKey,uId;
+RecyclerView recyclerView;
+List<Event> eventList;
 
 
 
@@ -78,27 +84,220 @@ String key;
         setContentView(R.layout.activity_navigation);
 
 
+        eventList = new ArrayList<>();
+
+        key = sharedPreferencesutils.getCurrentTeamId(this);
+
+        Log.i("TAG","my team id is "+ key);
+
 
         auth = FirebaseAuth.getInstance();
         user = auth.getCurrentUser();
-
-
-
-
-
-
+        uId = user.getUid();
 
         firebaseDatabase = FirebaseDatabase.getInstance();
         userRef = firebaseDatabase.getReference("Users").child(user.getUid());
         teamRef = firebaseDatabase.getReference("Teams");
         eventRef = firebaseDatabase.getReference("Events");
-
-
-
-        userRef.child("teamid").addValueEventListener(new ValueEventListener() {
+        attendRef = firebaseDatabase.getReference("Attendees");
+        //Getting teamid from userref
+       /* userRef.child("teamid").addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 key = dataSnapshot.getValue(String.class);
+
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+
+            }
+        });*/
+
+        eventRef.child(key).addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                eventList.clear();
+
+                for(DataSnapshot alleventsnapshot: dataSnapshot.getChildren()){
+
+                    //   Log.i("TAG","all event SNAPSHOT IS "+ alleventsnapshot.toString());
+                    for(DataSnapshot eventsnapshot: alleventsnapshot.getChildren())
+                    {
+                        Log.i("TAG","SNAPSHOT IS "+ eventsnapshot.toString());
+                        Event eachevent = eventsnapshot.getValue(Event.class);
+                        Log.i("TAG","each event is "+ eachevent.toString());
+
+
+                        //  String debug = eventsnapshot.child("Event Details").child("duration").getValue().toString();
+
+                        //    Log.i("TAG","debug string is "+ debug);
+
+                        eventList.add(eachevent);
+                    }
+                }
+
+            }
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+
+            }
+        });
+
+        recyclerView = findViewById(R.id.recycleview);
+        recyclerView.setHasFixedSize(true);
+        recyclerView.setLayoutManager(new LinearLayoutManager(this));
+        eventAdapter adapter = new eventAdapter(NavigationActivity.this,eventList);
+        recyclerView.setAdapter(adapter);
+        adapter.notifyDataSetChanged();
+
+        adapter.setOnItemClickListener(new eventAdapter.OnItemClickListener() {
+            @Override
+            public void onItemClick(int position) {
+
+                startActivity(new Intent(NavigationActivity.this,EventAttendees.class));
+
+
+            }
+
+            @Override
+            public void onGoingClick(int position) {
+                String myName = eventList.get(position).getEventName();
+                Toast.makeText(NavigationActivity.this, "Clicked going in "+myName, Toast.LENGTH_SHORT).show();
+                thisEventKey = eventList.get(position).getEventkey();
+
+                attendRef.child(thisEventKey).child(uId).setValue("Going");
+            }
+
+            @Override
+            public void onNotGoingClick(int position) {
+                String myName = eventList.get(position).getEventName();
+                Toast.makeText(NavigationActivity.this, "Clicked Notgoing in "+myName, Toast.LENGTH_SHORT).show();
+                thisEventKey = eventList.get(position).getEventkey();
+
+                attendRef.child(thisEventKey).child(uId).setValue("NotGoing");
+
+            }
+
+            @Override
+            public void onStatusClick(int position)
+            {
+                String myName = eventList.get(position).getEventName();
+                Toast.makeText(NavigationActivity.this, "Clicked Notgoing in "+myName, Toast.LENGTH_SHORT).show();
+                thisEventKey = eventList.get(position).getEventkey();
+
+                attendRef.child(thisEventKey).child(uId).setValue("null");
+
+            }
+
+        });
+
+
+
+
+
+
+
+      //  createEventlist();
+       // buildRecyclerView();
+
+
+
+        BottomNavigationView navigation = (BottomNavigationView) findViewById(R.id.navigation);
+        navigation.setOnNavigationItemSelectedListener(mOnNavigationItemSelectedListener);
+    }
+  /*  private void createEventlist()
+    {
+
+        eventRef.child(key).addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                eventList.clear();
+
+                for(DataSnapshot alleventsnapshot: dataSnapshot.getChildren()){
+
+                 //   Log.i("TAG","all event SNAPSHOT IS "+ alleventsnapshot.toString());
+                    for(DataSnapshot eventsnapshot: alleventsnapshot.getChildren())
+                    {
+                        Log.i("TAG","SNAPSHOT IS "+ eventsnapshot.toString());
+                        Event eachevent = eventsnapshot.getValue(Event.class);
+                        Log.i("TAG","each event is "+ eachevent.toString());
+
+
+                        //  String debug = eventsnapshot.child("Event Details").child("duration").getValue().toString();
+
+                        //    Log.i("TAG","debug string is "+ debug);
+
+                        eventList.add(eachevent);
+                    }
+                }
+
+            }
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+
+            }
+        });
+    }*/
+
+/*
+    private void buildRecyclerView()
+    {
+        recyclerView = findViewById(R.id.recycleview);
+        recyclerView.setHasFixedSize(true);
+        recyclerView.setLayoutManager(new LinearLayoutManager(this));
+        eventAdapter adapter = new eventAdapter(NavigationActivity.this,eventList);
+        recyclerView.setAdapter(adapter);
+        adapter.notifyDataSetChanged();
+
+        adapter.setOnItemClickListener(new eventAdapter.OnItemClickListener() {
+            @Override
+            public void onItemClick(int position) {
+                String myName = eventList.get(position).getEventName();
+                Toast.makeText(NavigationActivity.this, "myName is "+myName, Toast.LENGTH_LONG).show();
+
+            }
+        });
+
+
+
+    }
+*/
+
+//    @Override
+//    protected void onStart() {
+//        super.onStart();
+//        createEventlist();
+//
+//    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        if(item.getItemId()==R.id.signout) {
+            auth.signOut();
+            startActivity(new Intent(NavigationActivity.this,MainActivity.class));
+        }
+        else if(item.getItemId()==R.id.create_event)
+        {
+            startActivity(new Intent(NavigationActivity.this,addEvent.class));
+        }
+        return super.onOptionsItemSelected(item);
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.main_menu,menu);
+        return super.onCreateOptionsMenu(menu);
+    }
+
+   /* @Override
+    protected void onStart() {
+        super.onStart();
+
+        eventRef.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+
 
             }
 
@@ -110,38 +309,5 @@ String key;
 
 
 
-
-
-
-
-
-
-
-
-
-        BottomNavigationView navigation = (BottomNavigationView) findViewById(R.id.navigation);
-        navigation.setOnNavigationItemSelectedListener(mOnNavigationItemSelectedListener);
-    }
-
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        if(item.getItemId()==R.id.signout) {
-            auth.signOut();
-            startActivity(new Intent(NavigationActivity.this,MainActivity.class));
-        }
-        else if(item.getItemId()==R.id.create_team)
-        {
-
-        }
-        return super.onOptionsItemSelected(item);
-    }
-
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.main_menu,menu);
-        return super.onCreateOptionsMenu(menu);
-    }
-
-
+    }*/
 }

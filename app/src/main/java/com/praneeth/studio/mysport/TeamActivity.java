@@ -47,6 +47,7 @@ public class TeamActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_team);
 
+        key = sharedPreferencesutils.getCurrentTeamId(this);
 
         teamName = findViewById(R.id.teamname);
         listView = findViewById(R.id.listview);
@@ -65,20 +66,8 @@ public class TeamActivity extends AppCompatActivity {
         teamRef = firebaseDatabase.getReference("Teams");
         eventRef = firebaseDatabase.getReference("Events");
 
-        userRef.child("teamid").addValueEventListener(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-                 key = dataSnapshot.getValue(String.class);
-                 Log.i("TAG","key above pushteamdata is "+key);
-                 pushteamData(key);
 
-            }
-
-            @Override
-            public void onCancelled(DatabaseError databaseError) {
-
-            }
-        });
+        pushteamData(key);
 
 
 
@@ -104,6 +93,9 @@ public class TeamActivity extends AppCompatActivity {
 
             }
         });
+
+
+
 
         teamRef.child(key).child("players").addChildEventListener(new ChildEventListener() {
             @Override
@@ -149,7 +141,7 @@ public class TeamActivity extends AppCompatActivity {
             mauth.signOut();
             startActivity(new Intent(TeamActivity.this,MainActivity.class));
         }
-        else if(item.getItemId()==R.id.create_team)
+        else if(item.getItemId()==R.id.create_event)
         {
 
         }

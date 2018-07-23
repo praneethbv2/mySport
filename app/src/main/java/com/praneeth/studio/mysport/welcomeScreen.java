@@ -4,6 +4,7 @@ import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -102,6 +103,8 @@ public class welcomeScreen extends AppCompatActivity {
             public void onClick(DialogInterface dialogInterface, int i) {
                 key = catText.getText().toString();
 
+                sharedPreferencesutils.setCurrentTeamId(welcomeScreen.this,key);
+
                 userRef.child("teamid").setValue(key);
 
                 userRef.child("fullname").addListenerForSingleValueEvent(new ValueEventListener() {
@@ -163,6 +166,8 @@ public class welcomeScreen extends AppCompatActivity {
 
                 teamId = teamRef.push();
                 key = teamId.getKey();
+                sharedPreferencesutils.setCurrentTeamId(welcomeScreen.this,key);
+
 
                 userRef.child("teamid").setValue(key);
 

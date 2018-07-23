@@ -7,7 +7,7 @@
         android:id="@+id/signout" android:title="signout"
         app:showAsAction="never"/>
     <item
-        android:id="@+id/create_team"
+        android:id="@+id/create_event"
         android:icon="@android:drawable/ic_input_add"
         android:title="NewPost"
         app:showAsAction="always" />
