@@ -176,9 +176,11 @@ public class welcomeScreen extends AppCompatActivity {
                     public void onDataChange(DataSnapshot dataSnapshot) {
                         playername = dataSnapshot.getValue().toString();
 
-                        Log.i("TAG","PLAYER NAME IS"+playername);
                         Map<String,String> playersData = new HashMap<>();
                         playersData.put(user.getUid(),playername);
+                        sharedPreferencesutils.setCurrentName(welcomeScreen.this,playername);
+
+
                         Log.i("TAG","PLAYER NAME IS"+playername);
                         Log.i("TAG","PLAYERS DATA IS"+playersData);
 

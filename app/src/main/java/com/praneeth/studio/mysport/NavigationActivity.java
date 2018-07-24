@@ -4,6 +4,7 @@ import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.design.widget.BottomNavigationView;
@@ -39,7 +40,7 @@ private FirebaseDatabase firebaseDatabase;
 private DatabaseReference userRef,teamRef,eventRef,indTeamRef,teamId,attendRef;
 private FirebaseUser user;
 private FirebaseAuth auth;
-String key,thisEventKey,uId;
+String key,thisEventKey,uId,fullname;
 RecyclerView recyclerView;
 List<Event> eventList;
 
@@ -91,6 +92,8 @@ List<Event> eventList;
         Log.i("TAG","my team id is "+ key);
 
 
+
+
         auth = FirebaseAuth.getInstance();
         user = auth.getCurrentUser();
         uId = user.getUid();
@@ -113,6 +116,19 @@ List<Event> eventList;
 
             }
         });*/
+       userRef.addValueEventListener(new ValueEventListener() {
+           @Override
+           public void onDataChange(DataSnapshot dataSnapshot) {
+               fullname = dataSnapshot.child("fullname").getValue().toString();
+               sharedPreferencesutils.setCurrentName(NavigationActivity.this,fullname);
+           }
+
+           @Override
+           public void onCancelled(DatabaseError databaseError) {
+
+           }
+       });
+
 
         eventRef.child(key).addValueEventListener(new ValueEventListener() {
             @Override
@@ -124,9 +140,9 @@ List<Event> eventList;
                     //   Log.i("TAG","all event SNAPSHOT IS "+ alleventsnapshot.toString());
                     for(DataSnapshot eventsnapshot: alleventsnapshot.getChildren())
                     {
-                        Log.i("TAG","SNAPSHOT IS "+ eventsnapshot.toString());
+                       // Log.i("TAG","SNAPSHOT IS "+ eventsnapshot.toString());
                         Event eachevent = eventsnapshot.getValue(Event.class);
-                        Log.i("TAG","each event is "+ eachevent.toString());
+                        //Log.i("TAG","each event is "+ eachevent.toString());
 
 
                         //  String debug = eventsnapshot.child("Event Details").child("duration").getValue().toString();
@@ -155,7 +171,12 @@ List<Event> eventList;
             @Override
             public void onItemClick(int position) {
 
-                startActivity(new Intent(NavigationActivity.this,EventAttendees.class));
+                thisEventKey = eventList.get(position).getEventkey();
+
+                Intent evIntent = new Intent(NavigationActivity.this,EventAttendees.class);
+                evIntent.putExtra("thiseventkey",thisEventKey);
+                startActivity(evIntent);
+
 
 
             }
@@ -165,8 +186,10 @@ List<Event> eventList;
                 String myName = eventList.get(position).getEventName();
                 Toast.makeText(NavigationActivity.this, "Clicked going in "+myName, Toast.LENGTH_SHORT).show();
                 thisEventKey = eventList.get(position).getEventkey();
+                HashMap<String,String > map = new HashMap<>();
+                map.put("status","Going");
 
-                attendRef.child(thisEventKey).child(uId).setValue("Going");
+                attendRef.child(thisEventKey).child(fullname).setValue(map);
             }
 
             @Override
@@ -174,8 +197,10 @@ List<Event> eventList;
                 String myName = eventList.get(position).getEventName();
                 Toast.makeText(NavigationActivity.this, "Clicked Notgoing in "+myName, Toast.LENGTH_SHORT).show();
                 thisEventKey = eventList.get(position).getEventkey();
+                HashMap<String,String > map = new HashMap<>();
+                map.put("status","NotGoing");
 
-                attendRef.child(thisEventKey).child(uId).setValue("NotGoing");
+                attendRef.child(thisEventKey).child(fullname).setValue(map);
 
             }
 
@@ -185,8 +210,13 @@ List<Event> eventList;
                 String myName = eventList.get(position).getEventName();
                 Toast.makeText(NavigationActivity.this, "Clicked Notgoing in "+myName, Toast.LENGTH_SHORT).show();
                 thisEventKey = eventList.get(position).getEventkey();
+                HashMap<String,String > map = new HashMap<>();
+                map.put("status","null");
 
-                attendRef.child(thisEventKey).child(uId).setValue("null");
+                attendRef.child(thisEventKey).child(fullname).setValue(map);
+
+
+
 
             }
 
@@ -206,70 +236,9 @@ List<Event> eventList;
         BottomNavigationView navigation = (BottomNavigationView) findViewById(R.id.navigation);
         navigation.setOnNavigationItemSelectedListener(mOnNavigationItemSelectedListener);
     }
-  /*  private void createEventlist()
-    {
-
-        eventRef.child(key).addValueEventListener(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-                eventList.clear();
-
-                for(DataSnapshot alleventsnapshot: dataSnapshot.getChildren()){
-
-                 //   Log.i("TAG","all event SNAPSHOT IS "+ alleventsnapshot.toString());
-                    for(DataSnapshot eventsnapshot: alleventsnapshot.getChildren())
-                    {
-                        Log.i("TAG","SNAPSHOT IS "+ eventsnapshot.toString());
-                        Event eachevent = eventsnapshot.getValue(Event.class);
-                        Log.i("TAG","each event is "+ eachevent.toString());
-
-
-                        //  String debug = eventsnapshot.child("Event Details").child("duration").getValue().toString();
-
-                        //    Log.i("TAG","debug string is "+ debug);
-
-                        eventList.add(eachevent);
-                    }
-                }
-
-            }
-            @Override
-            public void onCancelled(DatabaseError databaseError) {
-
-            }
-        });
-    }*/
-
-/*
-    private void buildRecyclerView()
-    {
-        recyclerView = findViewById(R.id.recycleview);
-        recyclerView.setHasFixedSize(true);
-        recyclerView.setLayoutManager(new LinearLayoutManager(this));
-        eventAdapter adapter = new eventAdapter(NavigationActivity.this,eventList);
-        recyclerView.setAdapter(adapter);
-        adapter.notifyDataSetChanged();
-
-        adapter.setOnItemClickListener(new eventAdapter.OnItemClickListener() {
-            @Override
-            public void onItemClick(int position) {
-                String myName = eventList.get(position).getEventName();
-                Toast.makeText(NavigationActivity.this, "myName is "+myName, Toast.LENGTH_LONG).show();
-
-            }
-        });
 
 
 
-    }
-*/
-
-//    @Override
-//    protected void onStart() {
-//        super.onStart();
-//        createEventlist();
-//
-//    }
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
@@ -290,24 +259,5 @@ List<Event> eventList;
         return super.onCreateOptionsMenu(menu);
     }
 
-   /* @Override
-    protected void onStart() {
-        super.onStart();
 
-        eventRef.addValueEventListener(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-
-
-            }
-
-            @Override
-            public void onCancelled(DatabaseError databaseError) {
-
-            }
-        });
-
-
-
-    }*/
 }

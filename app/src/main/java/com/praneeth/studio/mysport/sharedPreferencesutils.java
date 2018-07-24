@@ -20,4 +20,21 @@ public class sharedPreferencesutils {
         return preferences.getString("teamid","");
     }
 
+    public static void setCurrentName(Context context,String name)
+    {
+        SharedPreferences preferences = context.getSharedPreferences("preferences", Activity.MODE_PRIVATE);
+        SharedPreferences.Editor editor = preferences.edit();
+        editor.putString("name",name);
+        editor.commit();
+    }
+    public static String getCurrentName(Context context)
+    {
+        SharedPreferences preferences = context.getSharedPreferences("preferences", Activity.MODE_PRIVATE);
+        return preferences.getString("name","");
+    }
+
+
+
+
+
 }
