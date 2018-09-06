@@ -1,7 +1,7 @@
 # mySport
 mySportApp
 
-• Developed an android application from scratch that allows users to create a team and invite others to join. User can create events and post messages to the team.
+• An android application that allows users to create a team and invite others to join. User can create events and post messages to the team.
 
 • Team members can mark their availability and can check the availability of other team members for the event.
 
